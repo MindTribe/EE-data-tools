@@ -1,0 +1,5 @@
+#Pycharm files
+.idea/
+
+#OS files
+*.DS_STORE
