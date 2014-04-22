@@ -3,3 +3,9 @@
 
 #OS files
 *.DS_STORE
+
+#Output files
+*.wav
+
+#Input files
+*.csv
