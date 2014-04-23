@@ -1,15 +1,16 @@
 #Starting code from https://gist.github.com/Pretz/1773870
 
-#!/usr/bin/python
- 
+# Audacity is a great tool for doing a lot of quick data analysis. As much of the data from our oscilloscopes is saved
+# in CSV format, having a tool to convert the data into a form Audacity can read can be useful.
+
 import wave
-import numpy
 import struct
 import sys
 import csv
-from scikits.samplerate import resample
 
- 
+import numpy
+
+
 def write_wav(data, filename, framerate, amplitude):
     wavfile = wave.open(filename, "w")
     nchannels = 1
@@ -19,11 +20,11 @@ def write_wav(data, filename, framerate, amplitude):
     comptype = "NONE"
     compname = "not compressed"
     wavfile.setparams((nchannels,
-                        sampwidth,
-                        framerate,
-                        nframes,
-                        comptype,
-                        compname))
+                       sampwidth,
+                       framerate,
+                       nframes,
+                       comptype,
+                       compname))
     print("Please be patient whilst the file is written")
     frames = []
     for s in data:
@@ -35,9 +36,9 @@ def write_wav(data, filename, framerate, amplitude):
     for x in xrange(0, 7200):
         wavfile.writeframes(frames)
     wavfile.close()
-    print("%s written" %(filename))
-    
-    
+    print("%s written" % (filename))
+
+
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
         print "You must supply a filename to generate"
@@ -48,7 +49,7 @@ if __name__ == "__main__":
             try:
                 data.append(float(value))
             except ValueError:
-                pass # Just skip it
+                pass  # Just skip it
         print "Generating wave file from %d samples" % (len(data),)
         arr = numpy.array(data)
         # Normalize data
