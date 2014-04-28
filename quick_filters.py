@@ -7,6 +7,7 @@ from scipy.signal import butter, lfilter
 import load_and_show
 
 
+
 # Quick FIR filter lowpass filter
 # The filter uses simple math that can be easily ported to embedded systems that may not want to use floating point
 # First block number of values are unfiltered, so this filter requires a settling time

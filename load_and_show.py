@@ -14,7 +14,6 @@ def load_csv(filename):
 # CSV is expected to have data labels in the first row, and data in all other rows
 # data column 0 is assumed to be time (or another independant variable) all other columns are assumed to be dependant
 def show_data(data):
-    print data
     plt.plot(data[:, 0], data[:, 1:])
     plt.show()
 

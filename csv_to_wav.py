@@ -4,14 +4,17 @@
 # in CSV format, having a tool to convert the data into a form Audacity can read can be useful.
 
 import wave
+import argparse
 import struct
-import sys
-import csv
 
 import numpy
 
+import load_and_show
 
-def write_wav(data, filename, framerate, amplitude):
+
+
+# Write one channel of 16bit integer data
+def write_wav(data, filename, framerate):
     wavfile = wave.open(filename, "w")
     nchannels = 1
     sampwidth = 2
@@ -28,35 +31,32 @@ def write_wav(data, filename, framerate, amplitude):
     print("Please be patient whilst the file is written")
     frames = []
     for s in data:
-        mul = int(s * amplitude)
-        # print "s: %f mul: %d" % (s, mul)
-        frames.append(struct.pack('h', mul))
-    # frames = (struct.pack('h', int(s*self.amp)) for s in sine_list)
+        frames.append(struct.pack('h', s))
+        print s
     frames = ''.join(frames)
-    for x in xrange(0, 7200):
-        wavfile.writeframes(frames)
+    wavfile.writeframes(frames)
     wavfile.close()
-    print("%s written" % (filename))
+    print("%s written" % filename)
+
+#
+MAX_AMPLITUDE = 32767
+
+
+def prep_data_for_wav(data):
+    for col in xrange(1, data.shape[1]):
+        data[:, col] /= numpy.max(data[:, col])
+        data[:, col] *= MAX_AMPLITUDE
+        data[:, col] = data[:, col].astype('i16')
+    return data
 
 
 if __name__ == "__main__":
-    if len(sys.argv) <= 1:
-        print "You must supply a filename to generate"
-        exit(-1)
-    for fname in sys.argv[1:]:
-        data = []
-        for time, value in csv.reader(open(fname, 'U'), delimiter=','):
-            try:
-                data.append(float(value))
-            except ValueError:
-                pass  # Just skip it
-        print "Generating wave file from %d samples" % (len(data),)
-        arr = numpy.array(data)
-        # Normalize data
-        arr /= numpy.max(numpy.abs(data))
-        filename_head, extension = fname.rsplit(".", 1)
-        # Resample normalized data to 44.1 kHz
-        data_samplerate = 600.0
-        #target_samplerate = 44100.0
-        #sampled = resample(arr, target_samplerate/data_samplerate,'sinc_best')
-        write_wav(arr, filename_head + ".wav", data_samplerate, 32700)
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-f', '--filename', dest='filename', help='Name of the CSV file to load')
+    args = parser.parse_args()
+    data = load_and_show.load_csv(args.filename)
+    print "Generating wave file from %d samples" % (len(data),)
+    data = prep_data_for_wav(data)
+    filename_head, extension = args.filename.rsplit(".", 1)
+    data_samplerate = 1.0 / (data[1, 0] - data[0, 0])
+    write_wav(data[:, 1], filename_head + ".wav", data_samplerate)
