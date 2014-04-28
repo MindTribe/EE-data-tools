@@ -1,4 +1,5 @@
-# Some quick, premade filter blocks for signal processing
+# Some quick, premade filter blocks for signal processing. Audacity has many useful filters available, but it does not
+# fit well into an automated workflow.
 
 
 import numpy
@@ -7,38 +8,36 @@ from scipy.signal import butter, lfilter
 import load_and_show
 
 
-
-# Quick FIR filter lowpass filter
+# Quick FIR lowpass filter
 # The filter uses simple math that can be easily ported to embedded systems that may not want to use floating point
 # First block number of values are unfiltered, so this filter requires a settling time
 def running_avg(vector, block=4):
-    filtered_data = numpy.zeros(len(vector))
+    filtered_vector = numpy.zeros(len(vector))
     for i in xrange(len(vector)):
         for j in xrange(min(block, i + 1)):
-            filtered_data[i] += vector[i - j]
-        filtered_data[i] /= min(i + 1, block)
-    return filtered_data
+            filtered_vector[i] += vector[i - j]
+        filtered_vector[i] /= min(i + 1, block)
+    return filtered_vector
 
 
 # Quick IIR lowpass filter
 # The filter uses simple math that can easily be ported to embedded systems
 def exponential_filter(vector, alpha=0.8):
-    filtered_data = numpy.zeros(len(vector))
-    filtered_data[0] = vector[0]
+    filtered_vector = numpy.zeros(len(vector))
+    filtered_vector[0] = vector[0]
     for i in xrange(1, len(vector)):
-        filtered_data[i] = alpha * vector[i] + (1 - alpha) * filtered_data[i - 1]
-    return filtered_data
+        filtered_vector[i] = alpha * vector[i] + (1 - alpha) * filtered_vector[i - 1]
+    return filtered_vector
 
 
 # From scipy cookbook
-# The filter
 def butter_bandpass_filter(vector, lowcut, highcut, sample_rate, order=1):
     nyq = sample_rate / 2.0
     low = lowcut / nyq
     high = highcut / nyq
     b, a = butter(order, [low, high], btype='band')
-    filtered_data = lfilter(b, a, vector)
-    return filtered_data
+    filtered_vector = lfilter(b, a, vector)
+    return filtered_vector
 
 
 if __name__ == "__main__":

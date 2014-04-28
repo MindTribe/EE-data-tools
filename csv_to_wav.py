@@ -1,6 +1,6 @@
 #Starting code from https://gist.github.com/Pretz/1773870
 
-# Audacity is a great tool for doing a lot of quick data analysis. As much of the data from our oscilloscopes is saved
+# Audacity is a useful tool for doing a lot of quick data analysis. As much of the data from oscilloscopes is saved
 # in CSV format, having a tool to convert the data into a form Audacity can read can be useful.
 
 import wave
@@ -38,14 +38,16 @@ def write_wav(data, filename, framerate):
     wavfile.close()
     print("%s written" % filename)
 
-#
-MAX_AMPLITUDE = 32767
+
+MAX_WAV_AMPLITUDE = 32767
 
 
+# Manipulate data that will be saved in the wav file. Column 0 is expected to be time, and therefore ignored.
+# Each channel is scaled to maximum value per channel (cannot compare amplitude across channels).
 def prep_data_for_wav(data):
     for col in xrange(1, data.shape[1]):
         data[:, col] /= numpy.max(data[:, col])
-        data[:, col] *= MAX_AMPLITUDE
+        data[:, col] *= MAX_WAV_AMPLITUDE
         data[:, col] = data[:, col].astype('i16')
     return data
 
@@ -57,6 +59,12 @@ if __name__ == "__main__":
     data = load_and_show.load_csv(args.filename)
     print "Generating wave file from %d samples" % (len(data),)
     data = prep_data_for_wav(data)
+
+    # make the output filename the same as the input
     filename_head, extension = args.filename.rsplit(".", 1)
+
+    # Assuming the sample_rate is constant in the data and column 0 = time
     data_samplerate = 1.0 / (data[1, 0] - data[0, 0])
+
+    # Time does not get written in the wav. Only data gets written. Time is accounted for in data_samplerate
     write_wav(data[:, 1], filename_head + ".wav", data_samplerate)
