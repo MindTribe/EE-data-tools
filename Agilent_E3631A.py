@@ -9,8 +9,8 @@
 import visa
 import time
 
-class AgilentE3631A(object):
 
+class AgilentE3631A(object):
     CHANNEL_P6V = 'P6V'
     CHANNEL_P25V = 'P25V'
     CHANNEL_N25V = 'N25V'
@@ -22,20 +22,26 @@ class AgilentE3631A(object):
         self.disconnect()
 
     def connect(self):
-        self.handle = visa.SerialInstrument('COM7',baud_rate=9600, parity=visa.no_parity, data_bits=8, stop_bits=1)
-        self.handle.timeout = 10
+        self.handle = visa.SerialInstrument('COM7', baud_rate=9600, parity=visa.no_parity, data_bits=8, stop_bits=1)
         self.handle.term_chars = '\r\n'
-        self.handle.write('\n') #unsure why, but writing a newline is in the example code
-        self.handle.write("SYST:REM") #Take control
-        self.handle.write("*RST; *CLS") #reset and clear
+
+        # Unsure why, but writing a newline is in the example code
+        self.handle.write('\n')
+        # Take control
+        self.handle.write('SYST:REM')
+        # Reset and clear
+        self.handle.write('*RST; *CLS')
+        # Give time for the system to stabilize
         time.sleep(5)
 
     def disconnect(self):
-        self.handle.write('SYST:LOC') #return control to panel
+        self.all_channels_off()
+        # return control to panel
+        self.handle.write('SYST:LOC')
         self.handle.close()
 
     def get_info(self):
-        print 'System Version ' + self.handle.ask("SYST:VERS?")
+        print 'System Version ' + self.handle.ask('SYST:VERS?')
         print 'System ID ' + self.handle.ask('*IDN?')
 
     def all_channels_on(self):
@@ -44,12 +50,26 @@ class AgilentE3631A(object):
     def all_channels_off(self):
         self.handle.write('OUTPUT:STAT OFF')
 
+    #Does not work
+    def measure(self):
+        print self.handle.write('MEAS:VOLT? ' + self.CHANNEL_P25V)
+
     def set_channel(self, channel=None, voltage_limit=1.0, current_limit=0.1):
         self.handle.write('APPL ' + channel + ',' + str(voltage_limit) + ',' + str(current_limit))
 
-
+# Command line interface shown as an example.
 if __name__ == "__main__":
+    import numpy as np
+
+    START_VOLTAGE = 3.0
+    END_VOLTAGE = 3.6
+    RANGE_VOLTAGE = 5
+    CURR_LIMIT = 0.1
+    STABLE_TIME = 5
+
     power_supply = AgilentE3631A()
     power_supply.get_info()
-    power_supply.set_channel(power_supply.CHANNEL_P25V)
-    power_supply.all_channels_on()
+    for volt in np.linspace(START_VOLTAGE, END_VOLTAGE, RANGE_VOLTAGE, endpoint=True):
+        power_supply.set_channel(power_supply.CHANNEL_P25V, voltage_limit=volt, current_limit=CURR_LIMIT)
+        power_supply.all_channels_on()
+        time.sleep(STABLE_TIME)
