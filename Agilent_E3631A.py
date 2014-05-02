@@ -50,10 +50,6 @@ class AgilentE3631A(object):
     def all_channels_off(self):
         self.handle.write('OUTPUT:STAT OFF')
 
-    #Does not work
-    def measure(self):
-        print self.handle.write('MEAS:VOLT? ' + self.CHANNEL_P25V)
-
     def set_channel(self, channel=None, voltage_limit=1.0, current_limit=0.1):
         self.handle.write('APPL ' + channel + ',' + str(voltage_limit) + ',' + str(current_limit))
 
