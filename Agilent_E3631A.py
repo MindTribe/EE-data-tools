@@ -9,24 +9,47 @@
 import visa
 import time
 
+class AgilentE3631A(object):
 
-def connect():
-    #rm = visa.ResourceManager()
-    print visa.get_instruments_list()
-    my_instrument = visa.SerialInstrument('COM7',baud_rate=9600, parity=visa.no_parity, data_bits=8, stop_bits=1)
-    my_instrument.timeout = 10
-    my_instrument.term_chars = '\r\n'
-    my_instrument.write('\n')
-    my_instrument.write("SYST:REM")
-    print "remote control"
-    time.sleep(3)
-    my_instrument.write("*RST; *CLS")
-    print "reset and clear"
-    time.sleep(5)
-    print 'get version'
-    print my_instrument.ask("SYST:VERS?")
-    print my_instrument.ask('*IDN?')
-    my_instrument.close()
+    CHANNEL_P6V = 'P6V'
+    CHANNEL_P25V = 'P25V'
+    CHANNEL_N25V = 'N25V'
+
+    def __init__(self):
+        self.connect()
+
+    def __del__(self):
+        self.disconnect()
+
+    def connect(self):
+        self.handle = visa.SerialInstrument('COM7',baud_rate=9600, parity=visa.no_parity, data_bits=8, stop_bits=1)
+        self.handle.timeout = 10
+        self.handle.term_chars = '\r\n'
+        self.handle.write('\n') #unsure why, but writing a newline is in the example code
+        self.handle.write("SYST:REM") #Take control
+        self.handle.write("*RST; *CLS") #reset and clear
+        time.sleep(5)
+
+    def disconnect(self):
+        self.handle.write('SYST:LOC') #return control to panel
+        self.handle.close()
+
+    def get_info(self):
+        print 'System Version ' + self.handle.ask("SYST:VERS?")
+        print 'System ID ' + self.handle.ask('*IDN?')
+
+    def all_channels_on(self):
+        self.handle.write('OUTPUT:STAT ON')
+
+    def all_channels_off(self):
+        self.handle.write('OUTPUT:STAT OFF')
+
+    def set_channel(self, channel=None, voltage_limit=1.0, current_limit=0.1):
+        self.handle.write('APPL ' + channel + ',' + str(voltage_limit) + ',' + str(current_limit))
+
 
 if __name__ == "__main__":
-    connect()
+    power_supply = AgilentE3631A()
+    power_supply.get_info()
+    power_supply.set_channel(power_supply.CHANNEL_P25V)
+    power_supply.all_channels_on()
