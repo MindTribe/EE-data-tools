@@ -26,42 +26,38 @@ if __name__ == "__main__":
 
     scope = ps5000a.PS5000a(connect=False)
     serial = scope.enumerateUnits()
-    #print serial
 
     scope = ps5000a.PS5000a(serial[0])
     #print scope.getAllUnitInfo()
 
-
     res = scope.setSamplingFrequency(SAMPLING_F, 4096)
-    #print res
     sampleRate = res[0]
     print "Sampling @ %f MHz, %d samples"%(res[0]/1E6, res[1])
 
-    #data = numpy.zeros(4096)
-    data = numpy.array(0)
+    # Set up each channel as a member of a dictionary
+    input_channels = {'A' : numpy.array(0)}
+    for count in xrange(args.channels):
+        input_channels[CHANNELS[count]] = numpy.array(0)
+
+    # set up scope channels
     for count in range(args.channels):
         scope.setChannel(CHANNELS[count], "DC", VOLT_RESOLUTION)
+
+    # Run the acquisition loop
     for _ in xrange(5):
         scope.runBlock()
         while(scope.isReady() == False): time.sleep(0.01)
-        a = scope.getDataV(CHANNELS[count], 4096)
-        b = scope.getDataV(CHANNELS[count], 4096)
-        data = zip(a,b)
-        print data
-        #data = numpy.append(data, [a,b])
-        #for count in range(args.channels):
-        #    data = numpy.column_stack((data, scope.getDataV(CHANNELS[count], 4096)))
-            #print data.astype(int), data.shape
+        for count in range(args.channels):
+            input_channels[CHANNELS[count]] = numpy.append(input_channels[CHANNELS[count]], scope.getDataV(CHANNELS[count], 4096))
 
-    #first sample seems to be extranously added
-    #data = data[1:]
-    #print data.shape
-    #data = numpy.reshape(data,(-1,args.channels))
+    # calculate time column
+    # NOTE: There may be timing issues between each scope.runBlock() call. Need to confirm
+    times = numpy.arange(start=0,stop=len(input_channels['A']),step=1,dtype=float)/res[0]
 
-
-    #calculate time column
-    times = numpy.arange(start=0,stop=data.shape[0],step=1,dtype=float)/res[0]
-
+    # This could probably all be printed directly from the dictionary instead of stacking a numpy array
+    data = input_channels['A']
+    for count in xrange(1, args.channels):
+        data = numpy.column_stack((data,input_channels[CHANNELS[count]]))
     data = numpy.column_stack((times,data))
 
     #supply = ...()
@@ -79,12 +75,12 @@ if __name__ == "__main__":
         #disable
 
     scope.close()
-    #break file into multiple parts, or add comment lines?
+    # Create the header
     header = 'Time'
     for count in xrange(args.channels):
         header = header + ',' + CHANNELS[count]
 
-    #format numpy array
+    # Save as CSV
     numpy.savetxt(fname=args.filename , X=data, delimiter=',', header=header)
 
 
