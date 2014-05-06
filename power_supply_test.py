@@ -2,9 +2,10 @@ import argparse
 import numpy
 import time
 
+import load_and_show
+
 from picoscope import ps5000a
 # import Agilent PS
-
 
 
 if __name__ == "__main__":
@@ -44,7 +45,7 @@ if __name__ == "__main__":
         scope.setChannel(CHANNELS[count], "DC", VOLT_RESOLUTION)
 
     # Run the acquisition loop
-    for _ in xrange(5):
+    for _ in xrange(3):
         scope.runBlock()
         while(scope.isReady() == False): time.sleep(0.01)
         for count in range(args.channels):
@@ -82,6 +83,9 @@ if __name__ == "__main__":
 
     # Save as CSV
     numpy.savetxt(fname=args.filename , X=data, delimiter=',', header=header)
+
+    # See data
+    load_and_show.show_data(data)
 
 
 
