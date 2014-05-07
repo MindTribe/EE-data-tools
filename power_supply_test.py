@@ -33,6 +33,7 @@ if __name__ == "__main__":
 
     res = scope.setSamplingFrequency(SAMPLING_F, 4096)
     sampleRate = res[0]
+    res = scope.setSamplingFrequency(SAMPLING_F, res[1]/4)
     print "Sampling @ %f MHz, %d samples"%(res[0]/1E6, res[1])
 
     # Set up each channel as a member of a dictionary
@@ -40,16 +41,26 @@ if __name__ == "__main__":
     for count in xrange(args.channels):
         input_channels[CHANNELS[count]] = numpy.array(0)
 
+
     # set up scope channels
+    scope.setResolution('12')
     for count in range(args.channels):
         scope.setChannel(CHANNELS[count], "DC", VOLT_RESOLUTION)
 
+
     # Run the acquisition loop
-    for _ in xrange(3):
+    t = time.time()
+    for _ in xrange(1):
         scope.runBlock()
         while(scope.isReady() == False): time.sleep(0.01)
         for count in range(args.channels):
-            input_channels[CHANNELS[count]] = numpy.append(input_channels[CHANNELS[count]], scope.getDataV(CHANNELS[count], 4096))
+            input_channels[CHANNELS[count]] = scope.getDataV(CHANNELS[count], res[1]/4)
+        scope.runBlock()
+        for count in range(args.channels):
+            numpy.append(input_channels[CHANNELS[count]], )
+        temp = time.time()
+        print temp-t
+        t = temp
 
     # calculate time column
     # NOTE: There may be timing issues between each scope.runBlock() call. Need to confirm
@@ -83,6 +94,7 @@ if __name__ == "__main__":
 
     # Save as CSV
     numpy.savetxt(fname=args.filename , X=data, delimiter=',', header=header)
+
 
     # See data
     load_and_show.show_data(data)
