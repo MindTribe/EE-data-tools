@@ -18,7 +18,7 @@ class Agilent6060B:
 
     def connect(self):
         # Set up USB to GPIB as per Prologix instructions
-        self.serial_handle = serial.Serial('/dev/tty.usbserial-PXWYFRKG', baudrate=9600, timeout=0.5)
+        self.serial_handle = serial.Serial('/dev/tty.usbserial-PXWYFRKG', baudrate=9600, timeout=0.1)
         self.serial_handle.write('++mode 1\n')
         self.serial_handle.read(256)
         self.serial_handle.write('++addr 5\n')

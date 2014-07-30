@@ -25,7 +25,8 @@ SWITCH_GATE_ON_VOLTAGE = 0
 DAC_REGISTER = 5000
 ANALOG_INPUT_REGISTER = 2
 #note that this is an empirical approximation of the time it takes to set the current on the electronic load. 
-PROGRAMMING_DELAY = 0.5
+#This value is determined mostly by the timeout parameter set in AGILENT_6060B.py. 
+PROGRAMMING_DELAY = 0.1
 
 def WriteRow(csvWriter, entryList):
 	csvWriter.writerow(entryList)
