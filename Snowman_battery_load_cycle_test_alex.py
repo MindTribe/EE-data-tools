@@ -83,7 +83,7 @@ def main():
 	startTime = time.time()
 
 	#create output base filename (YYYYMMDD-HHMMSS)
-	outputBaseFilename = time.strftime("%Y%m%d") + '-' + time.strftime("%H%M%S")
+	outputBaseFilename = 'battery-cycle-test-' + time.strftime("%Y%m%d") + '-' + time.strftime("%H%M%S")
 
 	#create directory for output files
 	os.mkdir(outputBaseFilename)
@@ -93,20 +93,21 @@ def main():
 	summaryWriter = csv.writer(summaryFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 	WriteRow(summaryWriter, ['Charge Cycle', 'Number of Discharge Cycles'])
 
-	chargeCycle = 1
+	chargeCycle = 0
 	while True:
+		chargeCycle += 1
 		#create output file
 		outputFile = open(os.path.join(outputBaseFilename, 'charge-cycle-%d.csv' % chargeCycle), 'wb')
 		writer = csv.writer(outputFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 		WriteRow(writer, ['Time (s)', 'Voltage (V)', 'Current (A)', 'Phase', 'Discharge Cycle'])
-		dischargeCycle = 1
+		dischargeCycle = 0
 		print '\nCharge cycle: %d' % chargeCycle
 		while ReadVoltage(d) >= MIN_VOLTAGE:
+			dischargeCycle += 1
 			print '\nDischarge cycle: %d' % dischargeCycle
 			ApplyCurrentProfile(load_handle, d, CURRENT_PROFILE, startTime, writer, dischargeCycle)
 			print 'Recover voltage: %f' % ReadVoltage(d)
 			print '____________________________'
-			dischargeCycle += 1
 		load_handle.set_current(0)
 		load_handle.turn_off
 		WriteRow(summaryWriter, [chargeCycle, dischargeCycle])
@@ -116,7 +117,6 @@ def main():
 				print ReadVoltage(d)
 				time.sleep(CHARGE_SAMPLING_PERIOD)
 		d.writeRegister(DAC_REGISTER, SWITCH_GATE_OFF_VOLTAGE)
-		chargeCycle += 1
 
 if __name__ == '__main__':
     main()
