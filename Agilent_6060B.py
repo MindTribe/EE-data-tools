@@ -3,8 +3,15 @@
 
 import serial
 import time
+from sys import platform
 
 GPIB_ADDRESS = 5
+TIMEOUT = 0.1
+MAC_OSX = 'darwin'
+WINDOWS = 'win32'
+LINUX = 'linux'
+LINUX2 = 'linux2'
+
 
 # should probably be inherited, abstracted, or somehow derived from the Prologix GPIB controller.
 class Agilent6060B:
@@ -18,7 +25,13 @@ class Agilent6060B:
 
     def connect(self):
         # Set up USB to GPIB as per Prologix instructions
-        self.serial_handle = serial.Serial('/dev/tty.usbserial-PXWYFRKG', baudrate=9600, timeout=0.1)
+        # Set up serial port depending on operating system
+        if platform == MAC_OSX or platform == LINUX or platform == LINUX2:
+            #note that this has not actually been tested on linux yet. 
+            self.serial_handle = serial.Serial('/dev/tty.usbserial-PXWYFRKG', baudrate=9600, timeout=TIMEOUT)
+        elif platform == WINDOWS:
+            self.serial_handle = serial.Serial('COM5', baudrate=9600, timeout=TIMEOUT)
+
         self.serial_handle.write('++mode 1\n')
         self.serial_handle.read(256)
         self.serial_handle.write('++addr 5\n')
