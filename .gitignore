@@ -9,3 +9,6 @@
 
 #Input files
 *.csv
+
+#Python module byte compile files
+*.pyc
