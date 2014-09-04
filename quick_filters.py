@@ -3,7 +3,7 @@
 
 
 import numpy
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, lfilter, firwin, kaiserord
 
 import load_and_show
 
@@ -39,6 +39,37 @@ def butter_bandpass_filter(vector, lowcut, highcut, sample_rate, order=1):
     filtered_vector = lfilter(b, a, vector)
     return filtered_vector
 
+#------------------------------------------------
+# Create a FIR filter and apply it to x.
+# from scipy cookbook
+#------------------------------------------------
+
+def fir_lowpass(vector, sample_rate, cutoff_hz):
+    # The Nyquist rate of the signal.
+    nyq_rate = sample_rate / 2.0
+
+    # The desired width of the transition from pass to stop,
+    # relative to the Nyquist rate.  We'll design the filter
+    # with a 5 Hz transition width.
+    width = 5.0/nyq_rate
+    
+    # The desired attenuation in the stop band, in dB.
+    ripple_db = 60.0
+    
+    # Compute the order and Kaiser parameter for the FIR filter.
+    N, beta = kaiserord(ripple_db, width)
+    
+    # The cutoff frequency of the filter.
+    #cutoff_hz = 10.0
+    
+    # Use firwin with a Kaiser window to create a lowpass FIR filter.
+    taps = firwin(N, cutoff_hz/nyq_rate, window=('kaiser', beta))
+    
+    # Use lfilter to filter x with the FIR filter.
+    filtered_x = lfilter(taps, 1.0, vector)
+    return filtered_x
+
+    
 
 if __name__ == "__main__":
     test = [1, 2, 3, 4, 5, 4, 6, 3, 7, 2, 9, 10, 8, 8, 8, 8, 8]
