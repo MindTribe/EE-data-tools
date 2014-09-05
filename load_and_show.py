@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 # Function takes a CSV filename and returns a numpy array. The first row is expected to be a header
-def load_csv(filename, header):
+def load_csv(filename, header = 1):
     data = numpy.genfromtxt(filename, delimiter=',', skip_header=header)
     return data
 
